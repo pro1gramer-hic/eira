@@ -35,20 +35,15 @@ body{background:#0d0804;min-height:100vh;font-family:'Crimson Text',Georgia,seri
 .btn-gold:hover{background:#e8b420}
 .btn-ghost{background:#1a0e05;color:#d4a017;border:1px solid #d4a017;border-radius:8px;padding:0.65rem 1.5rem;font-family:'Cinzel',serif;font-size:13px;cursor:pointer;letter-spacing:1px;transition:all 0.2s;width:100%;margin-top:0.75rem}
 .btn-ghost:hover{background:#2a1a08}
-
-/* SCANNER */
 .scanner-wrap{width:100%;margin:1.5rem 0;position:relative}
 #scanner-video{width:100%;border-radius:10px;border:1px solid #4a2e08;display:block}
 #scanner-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
-.scan-frame{width:200px;height:200px;border:2px solid #d4a017;border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,0.4)}
-.scanner-status{text-align:center;font-size:13px;color:#6a5030;font-style:italic;margin-top:0.75rem}
-#scan-success{display:none;text-align:center;padding:1rem;background:#1a0d04;border:1px solid #d4a017;border-radius:8px;color:#d4a017;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;margin-top:1rem;animation:fadeUp 0.5s ease}
-
-/* COEUR */
+.scan-frame{width:200px;height:200px;border:2px solid #d4a017;border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,0.5)}
+.scanner-status{text-align:center;font-size:13px;color:#6a5030;font-style:italic;margin-top:0.75rem;min-height:20px}
 .heart-wrap{text-align:center;margin-bottom:1.5rem}
 .heart-svg{animation:pulse 2s ease-in-out infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-.lock-title{font-family:'Cinzel',serif;font-size:22px;color:#d4a017;letter-spacing:2px;margin-bottom:0.75rem}
+.lock-title{font-family:'Cinzel',serif;font-size:22px;color:#d4a017;letter-spacing:2px;margin-bottom:0.75rem;text-align:center}
 .enigme{font-style:italic;color:#c4aa7a;font-size:16px;line-height:1.8;margin-bottom:1.75rem;text-align:center}
 .input-row{display:flex;gap:8px;justify-content:center;margin-bottom:0.75rem}
 .pwd-input{background:#120b03;border:1px solid #3a2508;border-radius:8px;color:#e8d5a3;padding:0.65rem 1rem;font-family:'Crimson Text',serif;font-size:17px;text-align:center;letter-spacing:3px;width:200px}
@@ -63,31 +58,27 @@ body{background:#0d0804;min-height:100vh;font-family:'Crimson Text',Georgia,seri
 .love-letter{background:#120b03;border:1px solid #2a1a08;border-radius:8px;padding:1.5rem;font-style:italic;font-size:17px;line-height:1.9;color:#e8c87a;text-align:center;margin-bottom:1.5rem}
 .love-signature{font-family:'Cinzel',serif;font-size:14px;color:#d4a017;text-align:center;margin-top:1rem}
 .home-intro{font-size:16px;color:#8a7050;font-style:italic;text-align:center;line-height:1.8;margin-bottom:2rem}
+.debug-box{background:#1a0d04;border:1px solid #3a2508;border-radius:6px;padding:0.5rem;font-size:11px;color:#5a3a10;word-break:break-all;margin-top:0.5rem;display:none}
 </style>
 </head>
 <body>
 <div id="stars-bg"></div>
 <div id="music-btn" onclick="toggleMusic()" title="Musique">🎵</div>
 
-<!-- ======================================================
-     🎵 MUSIQUE — remplace "musique.mp3" par ton fichier
-     ====================================================== -->
 <audio id="bgMusic" loop>
   <source src="love.mp3" type="audio/mpeg">
 </audio>
 
-<!-- ==================== PAGE ACCUEIL ==================== -->
+<!-- PAGE ACCUEIL -->
 <div id="page-home" class="page active">
   <div class="container">
     <div class="crest">
       <span class="crest-symbol">⚜</span>
-      <!-- 🖊 MODIFIER : titre et sous-titre -->
       <div class="title-main">Royaume d'Eira & Eryn</div>
       <div class="title-sub">Une quête d'amour · A quest of love</div>
     </div>
     <div class="divider">✦ ✦ ✦</div>
     <div class="parchment" style="text-align:center;">
-      <!-- 🖊 MODIFIER : message d'introduction -->
       <div class="home-intro">
         « Bienvenue, noble voyageuse...<br>
         Une quête t'a été préparée avec amour.<br>
@@ -99,7 +90,7 @@ body{background:#0d0804;min-height:100vh;font-family:'Crimson Text',Georgia,seri
   </div>
 </div>
 
-<!-- ==================== PAGE ÉTAPE ==================== -->
+<!-- PAGE ÉTAPE -->
 <div id="page-etape" class="page">
   <div class="container">
     <div class="crest">
@@ -120,28 +111,28 @@ body{background:#0d0804;min-height:100vh;font-family:'Crimson Text',Georgia,seri
       <div class="step-hint" id="step-hint"></div>
     </div>
     <button class="btn-gold" onclick="startScanner('etape')" id="scan-next-btn">✦ &nbsp;Scanner le prochain parchemin</button>
-    <div id="scan-success">✦ &nbsp;Parchemin trouvé ! Redirection...</div>
   </div>
 </div>
 
-<!-- ==================== PAGE SCANNER ==================== -->
+<!-- PAGE SCANNER -->
 <div id="page-scanner" class="page">
   <div class="container">
     <div class="crest">
       <span class="crest-symbol">🔍</span>
-      <div class="title-main">Scan</div>
+      <div class="title-main">Scanner</div>
       <div class="title-sub">Pointe vers le parchemin...</div>
     </div>
     <div class="scanner-wrap">
       <video id="scanner-video" playsinline autoplay muted></video>
       <div id="scanner-overlay"><div class="scan-frame"></div></div>
     </div>
-    <div class="scanner-status" id="scanner-status">Cherche un QR code...</div>
+    <div class="scanner-status" id="scanner-status">Initialisation de la caméra...</div>
+    <div class="debug-box" id="debug-box"></div>
     <button class="btn-ghost" onclick="stopScanner()">✕ &nbsp;Annuler</button>
   </div>
 </div>
 
-<!-- ==================== PAGE MON CŒUR ==================== -->
+<!-- PAGE MON CŒUR -->
 <div id="page-coeur" class="page">
   <div class="container">
     <div id="locked-state">
@@ -153,7 +144,7 @@ body{background:#0d0804;min-height:100vh;font-family:'Crimson Text',Georgia,seri
         </svg>
       </div>
       <div class="lock-title">Mon Cœur</div>
-      <!-- 🖊 MODIFIER : l'énigme -->
+      <!-- 🖊 MODIFIER : énigme -->
       <div class="enigme">
         « Pour ouvrir ce cœur, souviens-toi...<br>
         Quel est le jour béni où nos chemins<br>
@@ -181,10 +172,11 @@ body{background:#0d0804;min-height:100vh;font-family:'Crimson Text',Georgia,seri
       </a>
 
       <div class="parchment">
-        <!-- 🖊 MODIFIER : ta lettre d'amour -->
         <div class="love-letter">
-          Écris ici ta lettre d'amour pour Eira...<br><br>
-          Utilise &lt;br&gt; pour aller à la ligne.
+          Mon cœur, mon cœur s'emballe car je suis amoureux, amoureux depuis le premier jour de la plus belle créature du monde.<br><br>
+          Voilà déjà 1 an que je vis cet amour si passionnant à tes côtés. En un an, on a tout connu : nos joies, nos peines, et nos disputes. Mais le plus beau, c'est qu'on a su tout braver ensemble, sans jamais lâcher. Je suis tellement fier et heureux de voir à quel point nous grandissons ensemble jour après jour.<br><br>
+          Je t'aime Amaria, et je continuerai à t'aimer chaque seconde de plus que la veille. Joyeux 1 an à nous, mon amour.<br><br>
+          <em>Our forever starts here.</em>
         </div>
         <div class="love-signature">— Eryn ⚜</div>
       </div>
@@ -194,8 +186,9 @@ body{background:#0d0804;min-height:100vh;font-family:'Crimson Text',Georgia,seri
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
 <script>
+
 /* ======================================================
-   ⚙️ ÉTAPES — 🖊 MODIFIER ICI
+   🖊 ÉTAPES — MODIFIER ICI
    ====================================================== */
 const STEPS = [
   { clue: "Bienvenue, noble voyageuse... ta quête commence ici, là où chaque histoire débute — sous tes pieds.", hint: "Cherche à l'entrée, tout en bas." },
@@ -210,69 +203,138 @@ const STEPS = [
 ];
 
 /* ======================================================
-   🔑 MOT DE PASSE — 🖊 MODIFIER ICI
+   🔑 MOT DE PASSE — MODIFIER ICI
    ====================================================== */
 const VALID_PASSWORDS = ["24042025","24/04/2025","24-04-2025","24.04.2025"];
 
 /* ======================================================
-   LOGIQUE SCANNER
+   SCANNER — NE PAS MODIFIER
    ====================================================== */
 let videoStream = null;
 let scanInterval = null;
 let scannerFrom = 'home';
-const BASE_URL = 'https://pro1gramer-hic.github.io/eira/';
+let scanCanvas = document.createElement('canvas');
+let scanCtx = scanCanvas.getContext('2d');
+
+// Mots-clés qui identifient un QR valide — flexible, pas besoin d'URL exacte
+const QR_KEYWORDS = ['etape=', 'etape%3D', 'eira'];
+
+function isValidQR(text) {
+  const lower = text.toLowerCase();
+  return QR_KEYWORDS.some(k => lower.includes(k));
+}
+
+function extractEtape(text) {
+  // Essaie de trouver etape= dans l'URL
+  try {
+    // Cas URL complète
+    if (text.includes('?')) {
+      const qs = text.split('?')[1];
+      const params = new URLSearchParams(qs);
+      const e = params.get('etape');
+      if (e) return e;
+    }
+    // Cas texte brut "etape=3"
+    const match = text.match(/etape[=:]([a-z0-9]+)/i);
+    if (match) return match[1];
+  } catch(e) {}
+  return null;
+}
 
 function startScanner(from) {
   scannerFrom = from;
   show('page-scanner');
-  document.getElementById('scanner-status').textContent = 'Cherche un QR code...';
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-    .then(stream => {
-      videoStream = stream;
-      const video = document.getElementById('scanner-video');
-      video.srcObject = stream;
+  setStatus('Initialisation de la caméra...');
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    setStatus('❌ Caméra non supportée sur ce navigateur.');
+    return;
+  }
+
+  navigator.mediaDevices.getUserMedia({
+    video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+  })
+  .then(stream => {
+    videoStream = stream;
+    const video = document.getElementById('scanner-video');
+    video.srcObject = stream;
+    video.onloadedmetadata = () => {
       video.play();
-      scanInterval = setInterval(scanFrame, 300);
-    })
-    .catch(() => {
-      document.getElementById('scanner-status').textContent = 'Caméra non accessible. Vérifie les permissions.';
-    });
+      setStatus('Cherche un QR code...');
+      scanInterval = setInterval(scanFrame, 200);
+    };
+  })
+  .catch(err => {
+    setStatus('❌ Permission caméra refusée. Autorise l\'accès dans ton navigateur.');
+    console.error(err);
+  });
 }
 
 function scanFrame() {
   const video = document.getElementById('scanner-video');
-  if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0);
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const code = jsQR(imageData.data, imageData.width, imageData.height);
-  if (code) {
-    const url = code.data;
-    if (url.includes(BASE_URL)) {
-      stopScanner();
-      const params = new URLSearchParams(url.split('?')[1] || '');
-      const etape = params.get('etape');
-      if (etape) loadEtape(etape);
+  if (!video || video.readyState < 2 || video.videoWidth === 0) return;
+
+  scanCanvas.width = video.videoWidth;
+  scanCanvas.height = video.videoHeight;
+  scanCtx.drawImage(video, 0, 0);
+
+  let imageData;
+  try {
+    imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+  } catch(e) { return; }
+
+  const code = jsQR(imageData.data, imageData.width, imageData.height, {
+    inversionAttempts: 'dontInvert'
+  });
+
+  if (code && code.data) {
+    const text = code.data;
+    debug('QR lu : ' + text);
+
+    if (isValidQR(text)) {
+      const etape = extractEtape(text);
+      if (etape) {
+        stopScanner();
+        loadEtape(etape);
+      } else {
+        setStatus('QR détecté mais étape introuvable...');
+      }
     } else {
-      document.getElementById('scanner-status').textContent = '✗ Ce parchemin ne fait pas partie de la quête...';
+      setStatus('Ce parchemin ne fait pas partie de la quête...');
+      setTimeout(() => setStatus('Cherche un QR code...'), 2000);
     }
   }
 }
 
 function stopScanner() {
   clearInterval(scanInterval);
-  if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
-  if (scannerFrom === 'home') show('page-home');
-  else show('page-etape');
+  scanInterval = null;
+  if (videoStream) {
+    videoStream.getTracks().forEach(t => t.stop());
+    videoStream = null;
+  }
+  const video = document.getElementById('scanner-video');
+  if (video) video.srcObject = null;
+  show(scannerFrom === 'home' ? 'page-home' : 'page-etape');
 }
 
+function setStatus(msg) {
+  const el = document.getElementById('scanner-status');
+  if (el) el.textContent = msg;
+}
+
+function debug(msg) {
+  // Décommenter la ligne suivante pour voir les QR lus en bas de l'écran (debug)
+  // const el = document.getElementById('debug-box'); if(el){el.style.display='block';el.textContent=msg;}
+}
+
+/* ======================================================
+   ÉTAPES
+   ====================================================== */
 function loadEtape(etape) {
   if (etape === 'coeur' || etape === '10') { show('page-coeur'); return; }
   const n = parseInt(etape);
-  if (isNaN(n) || n < 1 || n > 9) return;
+  if (isNaN(n) || n < 1 || n > 9) { show('page-home'); return; }
   const step = STEPS[n - 1];
   if (!step) return;
   document.getElementById('etape-titre').textContent = 'Étape ' + n;
@@ -282,23 +344,24 @@ function loadEtape(etape) {
   const pct = Math.round((n / 10) * 100);
   document.getElementById('progress-fill').style.width = pct + '%';
   document.getElementById('progress-label').textContent = n + ' / 10';
-  if (n === 9) document.getElementById('scan-next-btn').textContent = '✦  Scanner le dernier parchemin';
+  document.getElementById('scan-next-btn').textContent =
+    n === 9 ? '✦  Scanner le dernier parchemin' : '✦  Scanner le prochain parchemin';
   show('page-etape');
 }
+
 /* ======================================================
    MOT DE PASSE
    ====================================================== */
-function normalize(v) { return v.replace(/[\/\-\.]/g,'').trim(); }
+function normalize(v) { return v.replace(/[\/\-\.\s]/g,'').trim(); }
 function tryUnlock() {
   const val = document.getElementById('pwd-input').value;
   const valid = VALID_PASSWORDS.some(p => normalize(p) === normalize(val));
-  const err = document.getElementById('error-txt');
   if (valid) {
-    err.classList.remove('show');
+    document.getElementById('error-txt').classList.remove('show');
     document.getElementById('locked-state').style.display = 'none';
     document.getElementById('unlock-content').classList.add('show');
   } else {
-    err.classList.add('show');
+    document.getElementById('error-txt').classList.add('show');
     document.getElementById('pwd-input').style.borderColor = '#c44';
     setTimeout(() => { document.getElementById('pwd-input').style.borderColor = ''; }, 1200);
   }
@@ -308,13 +371,12 @@ document.addEventListener('keydown', e => {
 });
 
 /* ======================================================
-   ROUTING URL (accès direct par QR code externe aussi)
+   ROUTING URL
    ====================================================== */
 function route() {
   const params = new URLSearchParams(window.location.search);
   const etape = params.get('etape');
   if (!etape) { show('page-home'); return; }
-  if (etape === 'coeur' || etape === '10') { show('page-coeur'); return; }
   loadEtape(etape);
 }
 
@@ -324,7 +386,7 @@ function show(id) {
 }
 
 function toRoman(n) {
-  return ['I','II','III','IV','V','VI','VII','VIII','IX','X'][n-1] || n;
+  return ['I','II','III','IV','V','VI','VII','VIII','IX','X'][n-1] || String(n);
 }
 
 /* ======================================================
@@ -346,8 +408,8 @@ function buildStars() {
   for (let i = 0; i < 100; i++) {
     const s = document.createElement('div');
     s.className = 'star';
-    const size = Math.random() * 2.5 + 0.5;
-    s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s`;
+    const sz = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s`;
     c.appendChild(s);
   }
 }
