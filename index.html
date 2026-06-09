@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Royaume d'Eira & Eryn</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d0804;min-height:100vh;font-family:'Crimson Text',Georgia,serif;color:#e8d5a3;overflow-x:hidden}
+#stars-bg{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
+.star{position:absolute;background:#fff;border-radius:50%;animation:twinkle linear infinite alternate}
+@keyframes twinkle{0%{opacity:0.1}100%{opacity:0.9}}
+#music-btn{position:fixed;top:16px;right:16px;z-index:100;background:#1a0e05;border:1px solid #d4a017;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;transition:background 0.2s}
+#music-btn:hover{background:#2a1a08}
+.page{display:none;position:relative;z-index:1}
+.page.active{display:block}
+.container{max-width:600px;margin:0 auto;padding:3rem 1.5rem 4rem;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.crest{text-align:center;margin-bottom:2rem}
+.crest-symbol{font-size:52px;display:block;margin-bottom:0.75rem;animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.title-main{font-family:'Cinzel',serif;font-size:26px;font-weight:600;color:#d4a017;letter-spacing:3px;text-transform:uppercase;margin-bottom:0.3rem}
+.title-sub{font-size:14px;font-style:italic;color:#6a5030;letter-spacing:2px}
+.divider{color:#d4a017;letter-spacing:10px;font-size:16px;margin:1.5rem 0;text-align:center;opacity:0.6}
+.parchment{background:#1a0d04;border:1px solid #4a2e08;border-radius:10px;padding:2rem 1.75rem;width:100%;position:relative}
+.parchment::before{content:'';position:absolute;inset:5px;border:1px solid #2a1a08;border-radius:7px;pointer-events:none}
+.step-num{font-family:'Cinzel',serif;font-size:11px;color:#6a5030;letter-spacing:3px;text-transform:uppercase;margin-bottom:0.5rem}
+.step-clue{font-size:18px;line-height:1.8;color:#e8c87a;font-style:italic;text-align:center;margin:1rem 0 1.5rem}
+.step-hint{font-size:13px;color:#5a3a10;text-align:center;font-style:italic}
+.progress-wrap{width:100%;margin-bottom:1.5rem}
+.progress-track{background:#120b03;border:1px solid #2a1a08;border-radius:20px;height:4px;overflow:hidden}
+.progress-fill{height:100%;background:#d4a017;border-radius:20px;transition:width 0.6s ease}
+.progress-label{font-size:11px;color:#5a3a10;text-align:right;margin-top:4px;font-family:'Cinzel',serif;letter-spacing:1px}
+.btn-gold{background:#d4a017;color:#1a0e05;border:none;border-radius:8px;padding:0.65rem 1.5rem;font-family:'Cinzel',serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:1px;transition:background 0.2s;width:100%;margin-top:1rem}
+.btn-gold:hover{background:#e8b420}
+.btn-ghost{background:#1a0e05;color:#d4a017;border:1px solid #d4a017;border-radius:8px;padding:0.65rem 1.5rem;font-family:'Cinzel',serif;font-size:13px;cursor:pointer;letter-spacing:1px;transition:all 0.2s;width:100%;margin-top:0.75rem}
+.btn-ghost:hover{background:#2a1a08}
+
+/* SCANNER */
+.scanner-wrap{width:100%;margin:1.5rem 0;position:relative}
+#scanner-video{width:100%;border-radius:10px;border:1px solid #4a2e08;display:block}
+#scanner-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.scan-frame{width:200px;height:200px;border:2px solid #d4a017;border-radius:10px;box-shadow:0 0 0 9999px rgba(0,0,0,0.4)}
+.scanner-status{text-align:center;font-size:13px;color:#6a5030;font-style:italic;margin-top:0.75rem}
+#scan-success{display:none;text-align:center;padding:1rem;background:#1a0d04;border:1px solid #d4a017;border-radius:8px;color:#d4a017;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;margin-top:1rem;animation:fadeUp 0.5s ease}
+
+/* COEUR */
+.heart-wrap{text-align:center;margin-bottom:1.5rem}
+.heart-svg{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.lock-title{font-family:'Cinzel',serif;font-size:22px;color:#d4a017;letter-spacing:2px;margin-bottom:0.75rem}
+.enigme{font-style:italic;color:#c4aa7a;font-size:16px;line-height:1.8;margin-bottom:1.75rem;text-align:center}
+.input-row{display:flex;gap:8px;justify-content:center;margin-bottom:0.75rem}
+.pwd-input{background:#120b03;border:1px solid #3a2508;border-radius:8px;color:#e8d5a3;padding:0.65rem 1rem;font-family:'Crimson Text',serif;font-size:17px;text-align:center;letter-spacing:3px;width:200px}
+.pwd-input:focus{outline:none;border-color:#d4a017}
+.btn-gold-sm{background:#d4a017;color:#1a0e05;border:none;border-radius:8px;padding:0.65rem 1.25rem;font-family:'Cinzel',serif;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.2s}
+.btn-gold-sm:hover{background:#e8b420}
+.error-txt{color:#c44;font-size:13px;text-align:center;display:none;margin-top:0.5rem;font-style:italic}
+.error-txt.show{display:block}
+.unlock-content{display:none}
+.unlock-content.show{display:block;animation:fadeUp 0.8s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.love-letter{background:#120b03;border:1px solid #2a1a08;border-radius:8px;padding:1.5rem;font-style:italic;font-size:17px;line-height:1.9;color:#e8c87a;text-align:center;margin-bottom:1.5rem}
+.love-signature{font-family:'Cinzel',serif;font-size:14px;color:#d4a017;text-align:center;margin-top:1rem}
+.home-intro{font-size:16px;color:#8a7050;font-style:italic;text-align:center;line-height:1.8;margin-bottom:2rem}
+</style>
+</head>
+<body>
+<div id="stars-bg"></div>
+<div id="music-btn" onclick="toggleMusic()" title="Musique">🎵</div>
+
+<!-- ======================================================
+     🎵 MUSIQUE — remplace "musique.mp3" par ton fichier
+     ====================================================== -->
+<audio id="bgMusic" loop>
+  <source src="musique.mp3" type="audio/mpeg">
+</audio>
+
+<!-- ==================== PAGE ACCUEIL ==================== -->
+<div id="page-home" class="page active">
+  <div class="container">
+    <div class="crest">
+      <span class="crest-symbol">⚜</span>
+      <!-- 🖊 MODIFIER : titre et sous-titre -->
+      <div class="title-main">Royaume d'Eira & Eryn</div>
+      <div class="title-sub">Une quête d'amour · A quest of love</div>
+    </div>
+    <div class="divider">✦ ✦ ✦</div>
+    <div class="parchment" style="text-align:center;">
+      <!-- 🖊 MODIFIER : message d'introduction -->
+      <div class="home-intro">
+        « Bienvenue, noble voyageuse...<br>
+        Une quête t'a été préparée avec amour.<br>
+        Suis les parchemins, un par un,<br>
+        et découvre ce qui t'attend au bout du chemin. »
+      </div>
+      <button class="btn-gold" onclick="startScanner('home')">✦ &nbsp;Scanner le premier parchemin</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE ÉTAPE ==================== -->
+<div id="page-etape" class="page">
+  <div class="container">
+    <div class="crest">
+      <span class="crest-symbol">🕯</span>
+      <div class="title-main" id="etape-titre">Étape</div>
+      <div class="title-sub">La quête continue...</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-label" id="progress-label"></div>
+    </div>
+    <div class="parchment" style="text-align:center;">
+      <div class="step-num" id="step-num">Parchemin I</div>
+      <div class="step-clue" id="step-clue">...</div>
+      <div class="divider">✦</div>
+      <div class="step-hint" id="step-hint"></div>
+    </div>
+    <button class="btn-gold" onclick="startScanner('etape')" id="scan-next-btn">✦ &nbsp;Scanner le prochain parchemin</button>
+    <div id="scan-success">✦ &nbsp;Parchemin trouvé ! Redirection...</div>
+  </div>
+</div>
+
+<!-- ==================== PAGE SCANNER ==================== -->
+<div id="page-scanner" class="page">
+  <div class="container">
+    <div class="crest">
+      <span class="crest-symbol">🔍</span>
+      <div class="title-main">Scan</div>
+      <div class="title-sub">Pointe vers le parchemin...</div>
+    </div>
+    <div class="scanner-wrap">
+      <video id="scanner-video" playsinline autoplay muted></video>
+      <div id="scanner-overlay"><div class="scan-frame"></div></div>
+    </div>
+    <div class="scanner-status" id="scanner-status">Cherche un QR code...</div>
+    <button class="btn-ghost" onclick="stopScanner()">✕ &nbsp;Annuler</button>
+  </div>
+</div>
+
+<!-- ==================== PAGE MON CŒUR ==================== -->
+<div id="page-coeur" class="page">
+  <div class="container">
+    <div id="locked-state">
+      <div class="heart-wrap">
+        <svg class="heart-svg" width="130" height="120" viewBox="0 0 130 120" xmlns="http://www.w3.org/2000/svg">
+          <path d="M65 105 C18 78 0 55 0 32 C0 14 14 0 32 0 C45 0 56 8 65 20 C74 8 85 0 98 0 C116 0 130 14 130 32 C130 55 112 78 65 105Z" fill="#2a0808" stroke="#d4a017" stroke-width="1.5"/>
+          <text x="65" y="58" text-anchor="middle" font-size="30" fill="#d4a017" font-family="serif">♥</text>
+          <text x="65" y="82" text-anchor="middle" font-size="22" fill="#8a3030">🔒</text>
+        </svg>
+      </div>
+      <div class="lock-title">Mon Cœur</div>
+      <!-- 🖊 MODIFIER : l'énigme -->
+      <div class="enigme">
+        « Pour ouvrir ce cœur, souviens-toi...<br>
+        Quel est le jour béni où nos chemins<br>
+        se sont croisés pour la première fois ? »
+      </div>
+      <div class="input-row">
+        <input class="pwd-input" type="text" id="pwd-input" placeholder="jj/mm/aaaa" maxlength="10">
+        <button class="btn-gold-sm" onclick="tryUnlock()">Ouvrir</button>
+      </div>
+      <div class="error-txt" id="error-txt">✗ Ce n'est pas encore la bonne clé, ma chérie...</div>
+    </div>
+
+    <div class="unlock-content" id="unlock-content">
+      <div class="crest">
+        <span class="crest-symbol">💛</span>
+        <div class="title-main">Notre Histoire</div>
+        <!-- 🖊 MODIFIER : date -->
+        <div class="title-sub">10 avril 2025 — pour toujours</div>
+      </div>
+      <div class="divider">✦ ✦ ✦</div>
+
+      <!-- 🖊 MODIFIER : lien Google Photos -->
+      <a href="COLLE_TON_LIEN_GOOGLE_PHOTOS_ICI" target="_blank" style="display:block;text-align:center;margin:1.5rem 0;background:#1a0d04;border:1px solid #d4a017;border-radius:10px;padding:1.5rem;font-family:'Cinzel',serif;color:#d4a017;font-size:16px;letter-spacing:2px;text-decoration:none;">
+        ✦ &nbsp;Ouvrir notre album photos&nbsp; ✦
+      </a>
+
+      <div class="parchment">
+        <!-- 🖊 MODIFIER : ta lettre d'amour -->
+        <div class="love-letter">
+          Écris ici ta lettre d'amour pour Eira...<br><br>
+          Utilise &lt;br&gt; pour aller à la ligne.
+        </div>
+        <div class="love-signature">— Eryn ⚜</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+<script>
+/* ======================================================
+   ⚙️ ÉTAPES — 🖊 MODIFIER ICI
+   ====================================================== */
+const STEPS = [
+  { clue: "Bienvenue, noble voyageuse... ta quête commence ici, là où chaque histoire débute — sous tes pieds.", hint: "Cherche à l'entrée, tout en bas." },
+  { clue: "Les meilleures histoires se racontent assis, au calme... cherche là où l'on se pose pour souffler.", hint: "Le petit salon t'attend." },
+  { clue: "La magie naît parfois avec de la chaleur et des arômes... cherche là où on nourrit ceux qu'on aime.", hint: "Quelque chose sent bon par ici..." },
+  { clue: "Sors au grand air... parfois les réponses se trouvent là où le ciel est à portée de main.", hint: "L'arrière-cour te connaît déjà." },
+  { clue: "Les enfants gardent les secrets les mieux cachés... cherche là où l'innocence règne encore.", hint: "La salle des jouets ne ment pas." },
+  { clue: "C'est ici que la famille se réunit... mais aujourd'hui c'est toi qui es au centre de tout.", hint: "Le salon du premier étage." },
+  { clue: "Monte un peu... les étoiles te regardent depuis longtemps. Cherche là où le vent passe librement.", hint: "Le balcon t'attend, ma reine." },
+  { clue: "Tu connais cette pièce... c'est là que mes rêves te rejoignent chaque nuit. Cherche bien.", hint: "Ma chambre. Regarde partout." },
+  { clue: "Tu es presque au sommet... les trésors les plus précieux se cachent dans les endroits oubliés.", hint: "Le grenier, tout en haut." },
+];
+
+/* ======================================================
+   🔑 MOT DE PASSE — 🖊 MODIFIER ICI
+   ====================================================== */
+const VALID_PASSWORDS = ["10042025","10/04/2025","10-04-2025","10.04.2025"];
+
+/* ======================================================
+   LOGIQUE SCANNER
+   ====================================================== */
+let videoStream = null;
+let scanInterval = null;
+let scannerFrom = 'home';
+const BASE_URL = 'https://pro1gramer-hic.github.io/eira/';
+
+function startScanner(from) {
+  scannerFrom = from;
+  show('page-scanner');
+  document.getElementById('scanner-status').textContent = 'Cherche un QR code...';
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(stream => {
+      videoStream = stream;
+      const video = document.getElementById('scanner-video');
+      video.srcObject = stream;
+      video.play();
+      scanInterval = setInterval(scanFrame, 300);
+    })
+    .catch(() => {
+      document.getElementById('scanner-status').textContent = 'Caméra non accessible. Vérifie les permissions.';
+    });
+}
+
+function scanFrame() {
+  const video = document.getElementById('scanner-video');
+  if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const code = jsQR(imageData.data, imageData.width, imageData.height);
+  if (code) {
+    const url = code.data;
+    if (url.includes(BASE_URL)) {
+      stopScanner();
+      const params = new URLSearchParams(url.split('?')[1] || '');
+      const etape = params.get('etape');
+      if (etape) loadEtape(etape);
+    } else {
+      document.getElementById('scanner-status').textContent = '✗ Ce parchemin ne fait pas partie de la quête...';
+    }
+  }
+}
+
+function stopScanner() {
+  clearInterval(scanInterval);
+  if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+  if (scannerFrom === 'home') show('page-home');
+  else show('page-etape');
+}
+
+function loadEtape(etape) {
+  if (etape === 'coeur' || etape === '10') { show('page-coeur'); return; }
+  const n = parseInt(etape);
+  if (isNaN(n) || n < 1 || n > 9) return;
+  const step = STEPS[n - 1];
+  if (!step) return;
+  document.getElementById('etape-titre').textContent = 'Étape ' + n;
+  document.getElementById('step-num').textContent = 'Parchemin ' + toRoman(n);
+  document.getElementById('step-clue').textContent = step.clue;
+  document.getElementById('step-hint').textContent = step.hint;
+  const pct = Math.round((n / 10) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = n + ' / 10';
+  if (n === 9) document.getElementById('scan-next-btn').textContent = '✦  Scanner le dernier parchemin';
+  show('page-etape');
+}
+
+/* ======================================================
+   MOT DE PASSE
+   ====================================================== */
+function normalize(v) { return v.replace(/[\/\-\.]/g,'').trim(); }
+function tryUnlock() {
+  const val = document.getElementById('pwd-input').value;
+  const valid = VALID_PASSWORDS.some(p => normalize(p) === normalize(val));
+  const err = document.getElementById('error-txt');
+  if (valid) {
+    err.classList.remove('show');
+    document.getElementById('locked-state').style.display = 'none';
+    document.getElementById('unlock-content').classList.add('show');
+  } else {
+    err.classList.add('show');
+    document.getElementById('pwd-input').style.borderColor = '#c44';
+    setTimeout(() => { document.getElementById('pwd-input').style.borderColor = ''; }, 1200);
+  }
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('page-coeur').classList.contains('active')) tryUnlock();
+});
+
+/* ======================================================
+   ROUTING URL (accès direct par QR code externe aussi)
+   ====================================================== */
+function route() {
+  const params = new URLSearchParams(window.location.search);
+  const etape = params.get('etape');
+  if (!etape) { show('page-home'); return; }
+  if (etape === 'coeur' || etape === '10') { show('page-coeur'); return; }
+  loadEtape(etape);
+}
+
+function show(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function toRoman(n) {
+  return ['I','II','III','IV','V','VI','VII','VIII','IX','X'][n-1] || n;
+}
+
+/* ======================================================
+   MUSIQUE
+   ====================================================== */
+let musicPlaying = false;
+function toggleMusic() {
+  const audio = document.getElementById('bgMusic');
+  const btn = document.getElementById('music-btn');
+  if (musicPlaying) { audio.pause(); btn.textContent = '🎵'; musicPlaying = false; }
+  else { audio.play().catch(()=>{}); btn.textContent = '🔇'; musicPlaying = true; }
+}
+
+/* ======================================================
+   ÉTOILES
+   ====================================================== */
+function buildStars() {
+  const c = document.getElementById('stars-bg');
+  for (let i = 0; i < 100; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s`;
+    c.appendChild(s);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => { buildStars(); route(); });
+</script>
+</body>
+</html>
