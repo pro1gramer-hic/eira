@@ -215,104 +215,75 @@ const STEPS = [
 const VALID_PASSWORDS = ["24042025","24/04/2025","24-04-2025","24.04.2025"];
 
 /* ======================================================
-   LOGIQUE SCANNER (Version Définitive & Anti-Blocage)
+   LOGIQUE SCANNER
    ====================================================== */
 let videoStream = null;
-let scanAnimationFrame = null;
+let scanInterval = null;
 let scannerFrom = 'home';
-
-const TARGET_DOMAIN = 'pro1gramer-hic.github.io'; 
+const BASE_URL = 'https://pro1gramer-hic.github.io/eira/';
 
 function startScanner(from) {
   scannerFrom = from;
   show('page-scanner');
-  document.getElementById('scanner-status').textContent = 'Recherche d\'un parchemin...';
-  
-  const constraints = { 
-    video: { 
-      facingMode: 'environment',
-      width: { ideal: 1280 },
-      height: { ideal: 720 }
-    } 
-  };
-
-  navigator.mediaDevices.getUserMedia(constraints)
+  document.getElementById('scanner-status').textContent = 'Cherche un QR code...';
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
     .then(stream => {
       videoStream = stream;
       const video = document.getElementById('scanner-video');
       video.srcObject = stream;
-      video.setAttribute("playsinline", true); 
       video.play();
-      
-      // Sécurité : On lance la boucle immédiatement. Elle attendra d'elle-même que les données arrivent.
-      if (scanAnimationFrame) cancelAnimationFrame(scanAnimationFrame);
-      scanAnimationFrame = requestAnimationFrame(scanFrame);
+      scanInterval = setInterval(scanFrame, 300);
     })
-    .catch((err) => {
-      console.error("Erreur caméra: ", err);
+    .catch(() => {
       document.getElementById('scanner-status').textContent = 'Caméra non accessible. Vérifie les permissions.';
     });
 }
 
 function scanFrame() {
   const video = document.getElementById('scanner-video');
-  
-  if (!videoStream) return; 
-
-  // On vérifie qu'on a bien reçu des images exploitables
-  if (video.readyState >= video.HAVE_CURRENT_DATA && video.videoWidth > 0) {
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, imageData.width, imageData.height);
-    
-    if (code) {
-      const scannedUrl = code.data;
-      
-      if (scannedUrl.toLowerCase().includes(TARGET_DOMAIN.toLowerCase())) {
-        
-        // Extraction ultra-robuste de l'étape sans utiliser 'new URL()' qui peut planter
-        const match = scannedUrl.match(/[?&]etape=([^&#]+)/);
-        const etape = match ? match[1] : null;
-        
-        if (etape) {
-          stopScanner();
-          const successDiv = document.getElementById('scan-success');
-          if (successDiv) successDiv.style.display = 'block';
-          
-          setTimeout(() => {
-            if (successDiv) successDiv.style.display = 'none';
-            loadEtape(etape);
-          }, 800);
-          return; 
-        } else {
-          document.getElementById('scanner-status').textContent = '⚠ URL valide mais paramètre ?etape= manquant.';
-        }
-      } else {
-        document.getElementById('scanner-status').textContent = '✗ Ce parchemin ne fait pas partie de la quête...';
-      }
+  if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const code = jsQR(imageData.data, imageData.width, imageData.height);
+  if (code) {
+    const url = code.data;
+    if (url.includes(BASE_URL)) {
+      stopScanner();
+      const params = new URLSearchParams(url.split('?')[1] || '');
+      const etape = params.get('etape');
+      if (etape) loadEtape(etape);
+    } else {
+      document.getElementById('scanner-status').textContent = '✗ Ce parchemin ne fait pas partie de la quête...';
     }
   }
-  
-  scanAnimationFrame = requestAnimationFrame(scanFrame);
 }
 
 function stopScanner() {
-  if (scanAnimationFrame) {
-    cancelAnimationFrame(scanAnimationFrame);
-    scanAnimationFrame = null;
-  }
-  if (videoStream) { 
-    videoStream.getTracks().forEach(track => track.stop()); 
-    videoStream = null; 
-  }
+  clearInterval(scanInterval);
+  if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
   if (scannerFrom === 'home') show('page-home');
   else show('page-etape');
+}
+
+function loadEtape(etape) {
+  if (etape === 'coeur' || etape === '10') { show('page-coeur'); return; }
+  const n = parseInt(etape);
+  if (isNaN(n) || n < 1 || n > 9) return;
+  const step = STEPS[n - 1];
+  if (!step) return;
+  document.getElementById('etape-titre').textContent = 'Étape ' + n;
+  document.getElementById('step-num').textContent = 'Parchemin ' + toRoman(n);
+  document.getElementById('step-clue').textContent = step.clue;
+  document.getElementById('step-hint').textContent = step.hint;
+  const pct = Math.round((n / 10) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = n + ' / 10';
+  if (n === 9) document.getElementById('scan-next-btn').textContent = '✦  Scanner le dernier parchemin';
+  show('page-etape');
 }
 /* ======================================================
    MOT DE PASSE
