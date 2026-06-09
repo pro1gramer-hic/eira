@@ -215,13 +215,12 @@ const STEPS = [
 const VALID_PASSWORDS = ["24042025","24/04/2025","24-04-2025","24.04.2025"];
 
 /* ======================================================
-   LOGIQUE SCANNER (Version Sécurisée et Robuste)
+   LOGIQUE SCANNER (Version Ultra-Compatible Mobile)
    ====================================================== */
 let videoStream = null;
-let scanInterval = null;
+let scanAnimationFrame = null; // Remplacement de setInterval par requestAnimationFrame pour plus de fluidité
 let scannerFrom = 'home';
 
-// On cible uniquement le domaine pour éviter les erreurs de "/" ou de "https"
 const TARGET_DOMAIN = 'pro1gramer-hic.github.io'; 
 
 function startScanner(from) {
@@ -229,15 +228,27 @@ function startScanner(from) {
   show('page-scanner');
   document.getElementById('scanner-status').textContent = 'Recherche d\'un parchemin...';
   
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+  // Configuration optimale de la caméra pour la mise au point des QR codes
+  const constraints = { 
+    video: { 
+      facingMode: 'environment',
+      width: { ideal: 1280 },
+      height: { ideal: 720 }
+    } 
+  };
+
+  navigator.mediaDevices.getUserMedia(constraints)
     .then(stream => {
       videoStream = stream;
       const video = document.getElementById('scanner-video');
       video.srcObject = stream;
-      video.setAttribute("playsinline", true); // Requis pour iOS
+      video.setAttribute("playsinline", true); // Crucial pour iOS Safari
       video.play();
-      // On lance le scan toutes les 300ms
-      scanInterval = setInterval(scanFrame, 300);
+      
+      // On attend que la vidéo soit prête et ait des dimensions valides
+      video.onloadedmetadata = () => {
+        scanAnimationFrame = requestAnimationFrame(scanFrame);
+      };
     })
     .catch((err) => {
       console.error("Erreur caméra: ", err);
@@ -247,55 +258,60 @@ function startScanner(from) {
 
 function scanFrame() {
   const video = document.getElementById('scanner-video');
-  if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+  
+  // Si la page a changé ou que le scanner est arrêté, on stoppe la boucle
+  if (!videoStream) return; 
 
-  const canvas = document.createElement('canvas');
-  // On force le canvas à prendre la taille réelle du flux vidéo
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const code = jsQR(imageData.data, imageData.width, imageData.height);
-  
-  if (code) {
-    const scannedUrl = code.data;
-    console.log("QR Code détecté :", scannedUrl); // Pour le mode debug
-
-    // Vérification intelligente : Est-ce que l'URL contient ton pseudo github ?
-    if (scannedUrl.toLowerCase().includes(TARGET_DOMAIN)) {
-      stopScanner();
+  // SÉCURITÉ CRUCIALE : Si la vidéo n'est pas prête, on passe au frame suivant
+  if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height);
+    
+    if (code) {
+      const scannedUrl = code.data;
       
-      try {
-        // Extraction propre du paramètre 'etape' de l'URL
-        const urlObj = new URL(scannedUrl);
-        const etape = urlObj.searchParams.get('etape');
+      if (scannedUrl.toLowerCase().includes(TARGET_DOMAIN)) {
+        stopScanner();
         
-        if (etape) {
-          // Affichage du message de succès
-          const successDiv = document.getElementById('scan-success');
-          successDiv.style.display = 'block';
+        try {
+          const urlObj = new URL(scannedUrl);
+          const etape = urlObj.searchParams.get('etape');
           
-          setTimeout(() => {
-            successDiv.style.display = 'none';
-            loadEtape(etape);
-          }, 1000);
-        } else {
-          document.getElementById('scanner-status').textContent = '⚠ Parchemin valide, mais aucune étape trouvée dedans.';
+          if (etape) {
+            const successDiv = document.getElementById('scan-success');
+            if (successDiv) successDiv.style.display = 'block';
+            
+            setTimeout(() => {
+              if (successDiv) successDiv.style.display = 'none';
+              loadEtape(etape);
+            }, 800);
+            return; // On sort pour ne pas relancer le frame suivant
+          }
+        } catch (e) {
+          document.getElementById('scanner-status').textContent = '⚠ Erreur de lecture de l\'URL.';
         }
-      } catch (e) {
-        document.getElementById('scanner-status').textContent = '⚠ Erreur lors de la lecture du code.';
+      } else {
+        document.getElementById('scanner-status').textContent = '✗ Ce parchemin ne fait pas partie de la quête...';
       }
-    } else {
-      document.getElementById('scanner-status').textContent = '✗ Ce parchemin ne fait pas partie de ta quête...';
     }
   }
+  
+  // On continue de scanner au prochain rafraîchissement d'écran
+  scanAnimationFrame = requestAnimationFrame(scanFrame);
 }
 
 function stopScanner() {
-  clearInterval(scanInterval);
+  if (scanAnimationFrame) {
+    cancelAnimationFrame(scanAnimationFrame);
+    scanAnimationFrame = null;
+  }
   if (videoStream) { 
     videoStream.getTracks().forEach(track => track.stop()); 
     videoStream = null; 
