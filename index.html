@@ -215,10 +215,10 @@ const STEPS = [
 const VALID_PASSWORDS = ["24042025","24/04/2025","24-04-2025","24.04.2025"];
 
 /* ======================================================
-   LOGIQUE SCANNER (Version Ultra-Compatible Mobile)
+   LOGIQUE SCANNER (Version Définitive & Anti-Blocage)
    ====================================================== */
 let videoStream = null;
-let scanAnimationFrame = null; // Remplacement de setInterval par requestAnimationFrame pour plus de fluidité
+let scanAnimationFrame = null;
 let scannerFrom = 'home';
 
 const TARGET_DOMAIN = 'pro1gramer-hic.github.io'; 
@@ -228,7 +228,6 @@ function startScanner(from) {
   show('page-scanner');
   document.getElementById('scanner-status').textContent = 'Recherche d\'un parchemin...';
   
-  // Configuration optimale de la caméra pour la mise au point des QR codes
   const constraints = { 
     video: { 
       facingMode: 'environment',
@@ -242,13 +241,12 @@ function startScanner(from) {
       videoStream = stream;
       const video = document.getElementById('scanner-video');
       video.srcObject = stream;
-      video.setAttribute("playsinline", true); // Crucial pour iOS Safari
+      video.setAttribute("playsinline", true); 
       video.play();
       
-      // On attend que la vidéo soit prête et ait des dimensions valides
-      video.onloadedmetadata = () => {
-        scanAnimationFrame = requestAnimationFrame(scanFrame);
-      };
+      // Sécurité : On lance la boucle immédiatement. Elle attendra d'elle-même que les données arrivent.
+      if (scanAnimationFrame) cancelAnimationFrame(scanAnimationFrame);
+      scanAnimationFrame = requestAnimationFrame(scanFrame);
     })
     .catch((err) => {
       console.error("Erreur caméra: ", err);
@@ -259,11 +257,10 @@ function startScanner(from) {
 function scanFrame() {
   const video = document.getElementById('scanner-video');
   
-  // Si la page a changé ou que le scanner est arrêté, on stoppe la boucle
   if (!videoStream) return; 
 
-  // SÉCURITÉ CRUCIALE : Si la vidéo n'est pas prête, on passe au frame suivant
-  if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+  // On vérifie qu'on a bien reçu des images exploitables
+  if (video.readyState >= video.HAVE_CURRENT_DATA && video.videoWidth > 0) {
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -277,25 +274,24 @@ function scanFrame() {
     if (code) {
       const scannedUrl = code.data;
       
-      if (scannedUrl.toLowerCase().includes(TARGET_DOMAIN)) {
-        stopScanner();
+      if (scannedUrl.toLowerCase().includes(TARGET_DOMAIN.toLowerCase())) {
         
-        try {
-          const urlObj = new URL(scannedUrl);
-          const etape = urlObj.searchParams.get('etape');
+        // Extraction ultra-robuste de l'étape sans utiliser 'new URL()' qui peut planter
+        const match = scannedUrl.match(/[?&]etape=([^&#]+)/);
+        const etape = match ? match[1] : null;
+        
+        if (etape) {
+          stopScanner();
+          const successDiv = document.getElementById('scan-success');
+          if (successDiv) successDiv.style.display = 'block';
           
-          if (etape) {
-            const successDiv = document.getElementById('scan-success');
-            if (successDiv) successDiv.style.display = 'block';
-            
-            setTimeout(() => {
-              if (successDiv) successDiv.style.display = 'none';
-              loadEtape(etape);
-            }, 800);
-            return; // On sort pour ne pas relancer le frame suivant
-          }
-        } catch (e) {
-          document.getElementById('scanner-status').textContent = '⚠ Erreur de lecture de l\'URL.';
+          setTimeout(() => {
+            if (successDiv) successDiv.style.display = 'none';
+            loadEtape(etape);
+          }, 800);
+          return; 
+        } else {
+          document.getElementById('scanner-status').textContent = '⚠ URL valide mais paramètre ?etape= manquant.';
         }
       } else {
         document.getElementById('scanner-status').textContent = '✗ Ce parchemin ne fait pas partie de la quête...';
@@ -303,7 +299,6 @@ function scanFrame() {
     }
   }
   
-  // On continue de scanner au prochain rafraîchissement d'écran
   scanAnimationFrame = requestAnimationFrame(scanFrame);
 }
 
@@ -319,7 +314,6 @@ function stopScanner() {
   if (scannerFrom === 'home') show('page-home');
   else show('page-etape');
 }
-
 /* ======================================================
    MOT DE PASSE
    ====================================================== */
