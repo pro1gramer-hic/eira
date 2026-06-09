@@ -184,8 +184,8 @@ body{background:#0d0804;min-height:100vh;font-family:'Crimson Text',Georgia,seri
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
-<script>
+<script type="module">
+import { BrowserQRCodeReader } from 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.4/+esm';
 
 /* ======================================================
    🖊 ÉTAPES — MODIFIER ICI
@@ -208,124 +208,70 @@ const STEPS = [
 const VALID_PASSWORDS = ["24042025","24/04/2025","24-04-2025","24.04.2025"];
 
 /* ======================================================
-   SCANNER — NE PAS MODIFIER
+   SCANNER ZXing — fiable sur iPhone Safari
    ====================================================== */
-let videoStream = null;
-let scanInterval = null;
+let codeReader = null;
 let scannerFrom = 'home';
-let scanCanvas = document.createElement('canvas');
-let scanCtx = scanCanvas.getContext('2d');
-
-// Mots-clés qui identifient un QR valide — flexible, pas besoin d'URL exacte
-const QR_KEYWORDS = ['etape=', 'etape%3D', 'eira'];
+let scanning = false;
 
 function isValidQR(text) {
   const lower = text.toLowerCase();
-  return QR_KEYWORDS.some(k => lower.includes(k));
+  return lower.includes('etape=') || lower.includes('etape%3d') || lower.includes('eira');
 }
 
 function extractEtape(text) {
-  // Essaie de trouver etape= dans l'URL
   try {
-    // Cas URL complète
     if (text.includes('?')) {
-      const qs = text.split('?')[1];
-      const params = new URLSearchParams(qs);
+      const params = new URLSearchParams(text.split('?')[1]);
       const e = params.get('etape');
       if (e) return e;
     }
-    // Cas texte brut "etape=3"
     const match = text.match(/etape[=:]([a-z0-9]+)/i);
     if (match) return match[1];
   } catch(e) {}
   return null;
 }
 
-function startScanner(from) {
+window.startScanner = function(from) {
   scannerFrom = from;
   show('page-scanner');
-  setStatus('Initialisation de la caméra...');
+  setStatus('Initialisation...');
+  scanning = true;
 
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    setStatus('❌ Caméra non supportée sur ce navigateur.');
-    return;
-  }
-
-  navigator.mediaDevices.getUserMedia({
-    video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
-  })
-  .then(stream => {
-    videoStream = stream;
-    const video = document.getElementById('scanner-video');
-    video.srcObject = stream;
-    video.onloadedmetadata = () => {
-      video.play();
-      setStatus('Cherche un QR code...');
-      scanInterval = setInterval(scanFrame, 200);
-    };
-  })
-  .catch(err => {
-    setStatus('❌ Permission caméra refusée. Autorise l\'accès dans ton navigateur.');
-    console.error(err);
-  });
-}
-
-function scanFrame() {
+  codeReader = new BrowserQRCodeReader();
   const video = document.getElementById('scanner-video');
-  if (!video || video.readyState < 2 || video.videoWidth === 0) return;
 
-  scanCanvas.width = video.videoWidth;
-  scanCanvas.height = video.videoHeight;
-  scanCtx.drawImage(video, 0, 0);
-
-  let imageData;
-  try {
-    imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-  } catch(e) { return; }
-
-  const code = jsQR(imageData.data, imageData.width, imageData.height, {
-    inversionAttempts: 'dontInvert'
-  });
-
-  if (code && code.data) {
-    const text = code.data;
-    debug('QR lu : ' + text);
-
-    if (isValidQR(text)) {
-      const etape = extractEtape(text);
-      if (etape) {
-        stopScanner();
-        loadEtape(etape);
+  codeReader.decodeFromVideoDevice(null, video, (result, err) => {
+    if (!scanning) return;
+    if (result) {
+      const text = result.getText();
+      if (isValidQR(text)) {
+        const etape = extractEtape(text);
+        if (etape) {
+          stopScanner();
+          loadEtape(etape);
+        }
       } else {
-        setStatus('QR détecté mais étape introuvable...');
+        setStatus('Ce parchemin ne fait pas partie de la quête...');
+        setTimeout(() => setStatus('Cherche un QR code...'), 2000);
       }
     } else {
-      setStatus('Ce parchemin ne fait pas partie de la quête...');
-      setTimeout(() => setStatus('Cherche un QR code...'), 2000);
+      setStatus('Cherche un QR code...');
     }
-  }
-}
+  }).catch(err => {
+    setStatus('❌ Autorise la caméra dans Safari (Réglages > Safari > Caméra)');
+  });
+};
 
-function stopScanner() {
-  clearInterval(scanInterval);
-  scanInterval = null;
-  if (videoStream) {
-    videoStream.getTracks().forEach(t => t.stop());
-    videoStream = null;
-  }
-  const video = document.getElementById('scanner-video');
-  if (video) video.srcObject = null;
+window.stopScanner = function() {
+  scanning = false;
+  if (codeReader) { codeReader.reset(); codeReader = null; }
   show(scannerFrom === 'home' ? 'page-home' : 'page-etape');
-}
+};
 
 function setStatus(msg) {
   const el = document.getElementById('scanner-status');
   if (el) el.textContent = msg;
-}
-
-function debug(msg) {
-  // Décommenter la ligne suivante pour voir les QR lus en bas de l'écran (debug)
-  // const el = document.getElementById('debug-box'); if(el){el.style.display='block';el.textContent=msg;}
 }
 
 /* ======================================================
@@ -353,7 +299,7 @@ function loadEtape(etape) {
    MOT DE PASSE
    ====================================================== */
 function normalize(v) { return v.replace(/[\/\-\.\s]/g,'').trim(); }
-function tryUnlock() {
+window.tryUnlock = function tryUnlock() {
   const val = document.getElementById('pwd-input').value;
   const valid = VALID_PASSWORDS.some(p => normalize(p) === normalize(val));
   if (valid) {
@@ -373,32 +319,50 @@ document.addEventListener('keydown', e => {
 /* ======================================================
    ROUTING URL
    ====================================================== */
-function route() {
+window.route = function() {
   const params = new URLSearchParams(window.location.search);
   const etape = params.get('etape');
   if (!etape) { show('page-home'); return; }
   loadEtape(etape);
-}
+};
 
-function show(id) {
+window.show = function(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-}
+};
 
-function toRoman(n) {
+window.toRoman = function(n) {
   return ['I','II','III','IV','V','VI','VII','VIII','IX','X'][n-1] || String(n);
-}
+};
+
+window.loadEtape = function(etape) {
+  if (etape === 'coeur' || etape === '10') { show('page-coeur'); return; }
+  const n = parseInt(etape);
+  if (isNaN(n) || n < 1 || n > 9) { show('page-home'); return; }
+  const step = STEPS[n - 1];
+  if (!step) return;
+  document.getElementById('etape-titre').textContent = 'Étape ' + n;
+  document.getElementById('step-num').textContent = 'Parchemin ' + toRoman(n);
+  document.getElementById('step-clue').textContent = step.clue;
+  document.getElementById('step-hint').textContent = step.hint;
+  const pct = Math.round((n / 10) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = n + ' / 10';
+  document.getElementById('scan-next-btn').textContent =
+    n === 9 ? '✦  Scanner le dernier parchemin' : '✦  Scanner le prochain parchemin';
+  show('page-etape');
+};
 
 /* ======================================================
    MUSIQUE
    ====================================================== */
 let musicPlaying = false;
-function toggleMusic() {
+window.toggleMusic = function() {
   const audio = document.getElementById('bgMusic');
   const btn = document.getElementById('music-btn');
   if (musicPlaying) { audio.pause(); btn.textContent = '🎵'; musicPlaying = false; }
   else { audio.play().catch(()=>{}); btn.textContent = '🔇'; musicPlaying = true; }
-}
+};
 
 /* ======================================================
    ÉTOILES
